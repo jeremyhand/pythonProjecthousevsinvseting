@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home Ownership vs. Rent & Invest Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 2rem;
+    }
+
+    .chart-container {
+      height: 300px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .result-value {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+
+    .btn-group .btn.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .emoji-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row g-4">
+      <!-- LEFT SIDE: FORM -->
+      <div class="col-lg-4">
+        <div class="card p-4">
+          <h3 class="emoji-title mb-3">🏠 Homeownership Variables</h3>
+          <form id="calculatorForm">
+            <div class="mb-2">
+              <label class="form-label">Home Price ($)</label>
+              <input type="number" class="form-control" name="home_price" value="200000">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Down Payment ($)</label>
+              <input type="number" class="form-control" name="down_payment" value="40000">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Loan Amount ($)</label>
+              <input type="number" class="form-control" name="loan_amount" value="160000" readonly>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Mortgage Rate (%)</label>
+              <input type="number" class="form-control" name="mortgage_rate" value="6.5">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Loan Term (Years)</label>
+              <input type="number" class="form-control" name="loan_term" value="20">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Home Appreciation Rate (%)</label>
+              <input type="number" class="form-control" name="home_appreciation" value="2">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Annual Ownership Costs (% of home value)</label>
+              <input type="number" class="form-control" name="annual_ownership_costs" value="2">
+              <small class="text-muted">Includes property taxes, insurance, maintenance</small>
+            </div>
+
+            <h3 class="emoji-title mt-4 mb-3">💸 Rent and Invest Variables</h3>
+            <div class="mb-2">
+              <label class="form-label">Initial Monthly Rent ($)</label>
+              <input type="number" class="form-control" name="monthly_rent" value="1400">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Annual Rent Increase (%)</label>
+              <input type="number" class="form-control" name="rent_growth" value="3">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Annual Stock Market Return (%)</label>
+              <input type="number" class="form-control" name="stock_return" value="10">
+            </div>
+
+            <h3 class="emoji-title mt-4 mb-3">⏱️ Time Horizon</h3>
+            <div class="mb-3">
+              <label class="form-label">Analysis Period (Years)</label>
+              <input type="number" class="form-control" name="years" value="5">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Calculate</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: CHART + RESULTS -->
+      <div class="col-lg-8">
+        <div class="card p-4 mb-4">
+          <h3 class="emoji-title mb-3">📊 Comparison Chart</h3>
+          <div class="btn-group mb-3" role="group">
+            <button type="button" class="btn btn-outline-primary active" id="netWorthBtn">Net Worth Comparison</button>
+            <button type="button" class="btn btn-outline-primary" id="costBtn">Cumulative Costs</button>
+            <button type="button" class="btn btn-outline-primary" id="valueBtn">Home Value & Investment</button>
+          </div>
+          <div class="chart-container">
+            <canvas id="comparisonChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card p-4">
+          <h3 class="emoji-title mb-3">🧮 Results Summary</h3>
+          <div class="row" id="resultsSection">
+            <div class="col-md-6">
+              <div class="card mb-3 p-3">
+                <h4>Homeownership</h4>
+                <ul class="list-unstyled mb-0">
+                  <li>Monthly Mortgage: $<span id="monthly_mortgage_result" class="result-value"></span></li>
+                  <li>Total Mortgage Paid: $<span id="total_mortgage_paid_result" class="result-value"></span></li>
+                  <li>Total Home Cost: $<span id="total_home_cost_result" class="result-value"></span></li>
+                  <li>Final Home Value: $<span id="final_home_value_result" class="result-value"></span></li>
+                  <li>Net Home Equity: $<span id="net_home_equity_result" class="result-value"></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-3 p-3">
+                <h4>Rent & Invest</h4>
+                <ul class="list-unstyled mb-0">
+                  <li>Final Monthly Rent: $<span id="final_monthly_rent_result" class="result-value"></span></li>
+                  <li>Total Rent Paid: $<span id="total_rent_paid_result" class="result-value"></span></li>
+                  <li>Investment Value: $<span id="investment_value_result" class="result-value"></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="card p-3">
+                <h4>Financial Outcome</h4>
+                <p id="conclusion" class="mb-0"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const form = document.getElementById("calculatorForm");
+  const ctx = document.getElementById("comparisonChart").getContext("2d");
+  let myChart = null;
+  let chartType = 'netWorth';
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const data = Object.fromEntries(new FormData(form).entries());
+    for (let key in data) data[key] = parseFloat(data[key]);
+
+    const home_price = data.home_price;
+    const down_payment = data.down_payment;
+    const loan_amount = home_price - down_payment;
+    const mortgage_rate = data.mortgage_rate / 100;
+    const home_appreciation = data.home_appreciation / 100;
+    const annual_costs = data.annual_ownership_costs / 100;
+    const monthly_rate = mortgage_rate / 12;
+    const num_payments = data.loan_term * 12;
+    const monthly_mortgage = loan_amount * monthly_rate / (1 - Math.pow(1 + monthly_rate, -num_payments));
+
+    const years = data.years;
+    const stock_return = data.stock_return / 100;
+    const rent_growth = data.rent_growth / 100;
+    let rent = data.monthly_rent;
+
+    let home_value = home_price;
+    let mortgage_balance = loan_amount;
+    let home_equity = down_payment;
+    let investment = down_payment;
+
+    const time_points = [], net_worth_buy = [], net_worth_rent = [],
+          cumulative_housing_costs = [], cumulative_rent_costs = [],
+          home_values = [], investment_values = [], mortgage_balances = [], rent_values = [];
+
+    let total_mortgage_paid = 0, cumulative_housing = down_payment, cumulative_rent = 0;
+
+    for (let year = 0; year <= years; year++) {
+      time_points.push(year);
+      net_worth_buy.push(home_equity);
+      net_worth_rent.push(investment);
+      cumulative_housing_costs.push(cumulative_housing);
+      cumulative_rent_costs.push(cumulative_rent);
+      home_values.push(home_value);
+      investment_values.push(investment);
+      mortgage_balances.push(mortgage_balance);
+      rent_values.push(rent * 12);
+
+      if (year === years) break;
+
+      home_value *= 1 + home_appreciation;
+      rent *= 1 + rent_growth;
+
+      let annual_mortgage = 0;
+      if (year < data.loan_term) {
+        annual_mortgage = monthly_mortgage * 12;
+        total_mortgage_paid += annual_mortgage;
+      }
+
+      const annual_home_costs = home_value * annual_costs;
+      cumulative_housing += annual_mortgage + annual_home_costs;
+
+      const annual_rent = rent * 12;
+      cumulative_rent += annual_rent;
+
+      const housing_cost = annual_mortgage + annual_home_costs;
+      const rent_savings = Math.max(0, housing_cost - annual_rent);
+
+      investment = (investment + rent_savings) * (1 + stock_return);
+      mortgage_balance = year < data.loan_term
+        ? loan_amount * Math.pow(1 + monthly_rate, year * 12) - (monthly_mortgage * ((Math.pow(1 + monthly_rate, year * 12) - 1) / monthly_rate))
+        : 0;
+
+      home_equity = home_value - mortgage_balance;
+    }
+
+    updateChart();
+
+    document.getElementById("monthly_mortgage_result").textContent = monthly_mortgage.toFixed(2);
+    document.getElementById("total_mortgage_paid_result").textContent = total_mortgage_paid.toFixed(0);
+    document.getElementById("total_home_cost_result").textContent = cumulative_housing.toFixed(0);
+    document.getElementById("final_home_value_result").textContent = home_value.toFixed(0);
+    document.getElementById("net_home_equity_result").textContent = home_equity.toFixed(0);
+    document.getElementById("final_monthly_rent_result").textContent = (rent_values[rent_values.length - 1] / 12).toFixed(2);
+    document.getElementById("total_rent_paid_result").textContent = cumulative_rent.toFixed(0);
+    document.getElementById("investment_value_result").textContent = investment.toFixed(0);
+
+    const diff = Math.abs(home_equity - investment).toFixed(0);
+    const yearsFinal = time_points[time_points.length - 1];
+    const resultText = home_equity > investment
+      ? `After ${yearsFinal} years, <strong>buying a home results in $${diff} more net worth</strong> than renting and investing.`
+      : `After ${yearsFinal} years, <strong>renting and investing results in $${diff} more net worth</strong> than buying.`;
+    document.getElementById("conclusion").innerHTML = resultText;
+
+    function updateChart() {
+      if (myChart) myChart.destroy();
+
+      let datasets;
+      if (chartType === 'netWorth') {
+        datasets = [
+          { label: 'Homeowner Net Worth', data: net_worth_buy, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', fill: true },
+          { label: 'Renter Net Worth', data: net_worth_rent, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.1)', fill: true }
+        ];
+      } else if (chartType === 'costs') {
+        datasets = [
+          { label: 'Cumulative Housing Costs', data: cumulative_housing_costs, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', fill: true },
+          { label: 'Cumulative Rent Costs', data: cumulative_rent_costs, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.1)', fill: true }
+        ];
+      } else {
+        datasets = [
+          { label: 'Home Value', data: home_values, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', fill: true },
+          { label: 'Investment Value', data: investment_values, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.1)', fill: true },
+          { label: 'Mortgage Balance', data: mortgage_balances, borderColor: '#6c757d', backgroundColor: 'rgba(108,117,125,0.1)', fill: true }
+        ];
+      }
+
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: time_points.map(y => `Year ${y}`),
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: val => '$' + Number(val).toLocaleString()
+              }
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById('netWorthBtn').onclick = () => { chartType = 'netWorth'; updateChart(); setActive(this); };
+    document.getElementById('costBtn').onclick = () => { chartType = 'costs'; updateChart(); setActive(this); };
+    document.getElementById('valueBtn').onclick = () => { chartType = 'values'; updateChart(); setActive(this); };
+
+    function setActive(btn) {
+      document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  });
+
+  // Auto-calculate on load
+  form.dispatchEvent(new Event("submit"));
+
+  // Update loan amount on input
+  document.querySelector('[name="home_price"]').addEventListener('input', updateLoan);
+  document.querySelector('[name="down_payment"]').addEventListener('input', updateLoan);
+
+  function updateLoan() {
+    const price = parseFloat(document.querySelector('[name="home_price"]').value) || 0;
+    const down = parseFloat(document.querySelector('[name="down_payment"]').value) || 0;
+    document.querySelector('[name="loan_amount"]').value = Math.max(0, price - down);
+  }
+</script>
+
+</body>
+</html>
